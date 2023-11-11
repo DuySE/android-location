@@ -26,9 +26,10 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity implements LocationListener {
     private LocationManager locationManager;
     private TextView txtViewLocation;
-    private Location gpsLocation, userLocation;
-
+    private Location userLocation;
     private Geocoder geocoder;
+
+    private final int LOCATION_REQUEST_CODE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,13 +50,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 ContextCompat.checkSelfPermission(this,
                         Manifest.permission.ACCESS_COARSE_LOCATION) !=
                         PackageManager.PERMISSION_GRANTED) {
-            int LOCATION_REQUEST_CODE = 1;
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION},
                     LOCATION_REQUEST_CODE);
         } else {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-            gpsLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         }
     }
 
@@ -66,9 +66,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             double endLatitude = addressList.get(0).getLatitude();
             double endLongitude = addressList.get(0).getLongitude();
             float[] results = new float[1];
-            Location.distanceBetween(userLocation.getLatitude(), userLocation.getLongitude(), endLatitude, endLongitude, results);
+            Location.distanceBetween(userLocation.getLatitude(), userLocation.getLongitude(),
+                    endLatitude, endLongitude, results);
+            Log.d("GPS", userLocation.getLatitude() + " " + userLocation.getLongitude());
             String result = getString(R.string.distance, results[0]);
-            Log.d("AAA", result);
             txtViewLocation.setGravity(View.TEXT_ALIGNMENT_CENTER);
             txtViewLocation.setText(result);
         } catch (IOException e) {
@@ -77,8 +78,19 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_REQUEST_CODE) {
+            userLocation.setLatitude(0);
+            userLocation.setLongitude(0);
+            onLocationChanged(userLocation);
+        }
+    }
+
+    @Override
     public void onLocationChanged(@NonNull Location location) {
-        userLocation.setLatitude(gpsLocation.getLatitude());
-        userLocation.setLongitude(gpsLocation.getLongitude());
+        userLocation.setLatitude(location.getLatitude());
+        userLocation.setLongitude(location.getLongitude());
     }
 }
