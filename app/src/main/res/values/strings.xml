@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">GeocoderDemo</string>
-    <string name="btnGetLocation">Get Location</string>
+    <string name="get_distance">Get distance</string>
+    <string name="distance">Distance: %1$f meters</string>
 </resources>
