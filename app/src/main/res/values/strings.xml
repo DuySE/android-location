@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">GeocoderDemo</string>
+    <string name="btnGetLocation">Get Location</string>
+</resources>
