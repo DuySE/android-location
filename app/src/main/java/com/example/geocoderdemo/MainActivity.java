@@ -26,7 +26,7 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity implements LocationListener {
     private LocationManager locationManager;
     private TextView txtViewLocation;
-    private Location userLocation;
+    private Location gpsLocation, userLocation;
 
     private Geocoder geocoder;
 
@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     LOCATION_REQUEST_CODE);
         } else {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+            gpsLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         }
     }
 
@@ -77,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     @Override
     public void onLocationChanged(@NonNull Location location) {
-        userLocation.setLatitude(location.getLatitude());
-        userLocation.setLongitude(location.getLongitude());
+        userLocation.setLatitude(gpsLocation.getLatitude());
+        userLocation.setLongitude(gpsLocation.getLongitude());
     }
 }
