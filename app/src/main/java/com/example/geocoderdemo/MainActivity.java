@@ -19,6 +19,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
@@ -28,8 +31,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private TextView txtViewLocation;
     private Location userLocation;
     private Geocoder geocoder;
-
-    private final int LOCATION_REQUEST_CODE = 1;
+    private FusedLocationProviderClient fusedLocationClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,8 +40,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         txtViewLocation = findViewById(R.id.txtViewLocation);
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         geocoder = new Geocoder(this, Locale.getDefault());
-        askPermission();
         userLocation = new Location(LocationManager.GPS_PROVIDER);
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        askPermission();
         Button button = findViewById(R.id.btnGetDistance);
         button.setOnClickListener(view -> calculateDistance());
     }
@@ -50,12 +53,27 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 ContextCompat.checkSelfPermission(this,
                         Manifest.permission.ACCESS_COARSE_LOCATION) !=
                         PackageManager.PERMISSION_GRANTED) {
+            final int LOCATION_REQUEST_CODE = 1;
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
                             Manifest.permission.ACCESS_COARSE_LOCATION},
                     LOCATION_REQUEST_CODE);
         } else {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
+            fusedLocationClient.getLastLocation()
+                    .addOnSuccessListener(this, location -> {
+                        // Got last known location. In some rare situations this can be null.
+                        if (location != null) {
+                            // Logic to handle location object
+                            userLocation.setLatitude(location.getLatitude());
+                            userLocation.setLongitude(location.getLongitude());
+                            Log.d("ABC", location.getLatitude() + " " + location.getLongitude());
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.d("ERR", "Error trying to get last GPS location");
+                        e.printStackTrace();
+                    });
         }
     }
 
@@ -74,17 +92,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             txtViewLocation.setText(result);
         } catch (IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == LOCATION_REQUEST_CODE) {
-            userLocation.setLatitude(0);
-            userLocation.setLongitude(0);
-            onLocationChanged(userLocation);
         }
     }
 
